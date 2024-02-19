@@ -1,13 +1,15 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<unistd.h>
 #include<string.h>
 int main()
 {
-    char str[101];
+    char str[102];
     memset(str,'\0',100);
-    for(int i=0;i<100;i++)
+    const char* s="-\\|/";
+    for(int i=0;i<=100;i++)
     {
-        printf("%s\r",str);
+        printf("[%-100s][%3d%%][%c]\r",str,i,s[rand()%5]);
         fflush(stdout);
         usleep(100000);
         str[i]='#';
