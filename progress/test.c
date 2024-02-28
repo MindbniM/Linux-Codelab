@@ -7,12 +7,27 @@ int main()
     char str[102];
     memset(str,'\0',100);
     const char* s="-\\|/";
-    for(int i=0;i<=100;i++)
+    pid_t a=fork();
+    if(a==0)
     {
-        printf("[%-100s][%3d%%][%c]\r",str,i,s[rand()%5]);
-        fflush(stdout);
-        usleep(100000);
-        str[i]='#';
+        for(int i=0;i<=100;i++)
+        {
+            printf("[%-100s][%3d%%][%c][Pid:%d][PPid:%d]\r",str,i,s[rand()%5],getpid(),getppid());  
+            fflush(stdout);
+            usleep(100000);
+            str[i]='#';
+        }
+    }
+    else 
+    {
+        for(int i=0;i<=100;i++)  
+        {  
+              printf("[%-100s][%3d%%][%c][Pid:%d][PPid:%d]\r",str,i,s[rand()%5],getpid(),getppid());  
+              fflush(stdout);  
+              usleep(100000);  
+              str[i]='#';  
+        }  
+  
     }
     printf("\n");
     return 0;
