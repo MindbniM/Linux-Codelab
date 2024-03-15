@@ -2,6 +2,7 @@
 *.d
 *.exe
 Makefile
+.gitignore
 # Object files
 *.o
 *.ko
