@@ -28,5 +28,6 @@ int main(int args,char *argv[])
         ps.SendTaskCode(wr);
         cun--;
     }
+    sleep(4);
     return 0;
 }

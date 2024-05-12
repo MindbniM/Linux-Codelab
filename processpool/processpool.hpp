@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <vector>
 #include <functional>
+#include<sys/wait.h>
+#include<sys/types.h>
 enum
 {
     P_number_error = 1,
@@ -63,6 +65,10 @@ public:
     {
         return _wfd;
     }
+    pid_t getpid()
+    {
+        return _pr_pid;
+    }
 private:
     pid_t _pr_pid;
     int _wfd;
@@ -88,6 +94,10 @@ public:
             if (id == 0)
             {
                 close(wfd);
+                for(auto& i:_v)
+                {
+                    close(i.getwfd());
+                }
                 dup2(rfd,0);
                 work(wr);
                 exit(0);
@@ -111,6 +121,15 @@ public:
         uint32_t wid=wr.getNextworkid();
         write(wfd,&wid,sizeof(wid));
     }
+    ~processpool()
+    {
+        for(auto& i:_v)
+        {
+            close(i.getwfd());
+            sleep(1);
+            waitpid(i.getpid(),nullptr,0);
+        }
+    }
 private:
     template <class T>
     void work(works<T> &wr)
@@ -124,9 +143,12 @@ private:
             {
                 auto w = wr.getwork(command_id);
                 w();
-                std::cout<<"pid: "<<getpid()+"进程工作完成"<<std::endl;
+                std::cout<<"pid: "<<getpid()<<"进程工作完成"<<std::endl;
             }
-            sleep(1);
+            else if(n==0)
+            {
+                exit(0);
+            }
         }
     }
     int _n;
