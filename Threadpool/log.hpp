@@ -11,7 +11,7 @@ namespace log
 #define STDOUT 0x2
     class log
     {
-    public:            
+    public:
         log(const log& l)=delete;
         log& operator=(const log l)=delete;
         void out(const std::string& file,int line,const char* str,...)
@@ -31,6 +31,14 @@ namespace log
                 std::cout<<log<<std::endl;
             }
         }
+        ~log()
+        {
+            if (_out_flag & FILEOUT && _file.is_open())
+            {
+                _file.close();
+            }
+        }
+    private:
         log(const std::string &file_name, int flag) : _fname(file_name), _out_flag(flag)
         {
             if (flag & FILEOUT)
@@ -50,22 +58,17 @@ namespace log
             snprintf(buff,64,"%d-%d-%d %d:%d",pt->tm_year+1900,pt->tm_mon+1,pt->tm_mday,pt->tm_hour,pt->tm_min);
             return buff;
         }
-        ~log()
-        {
-            if (_out_flag & FILEOUT && _file.is_open())
-            {
-                _file.close();
-            }
-        }
         
         std::string _fname;
         int _out_flag;
         std::string _log_flag;
         std::fstream _file;
-        static log log_debug;
-        static log log_info;
-        static log log_warning;
-        static log log_error;
-        static log log_fatal;
+    public:
+        static log debug;
+        static log info;
+        static log warning;
+        static log error;
+        static log fatal;
     };
+#define DEBUG(str,...) log::log::debug.out(__FILE__,__LINE__,str,## __VA_ARGS__)
 }
