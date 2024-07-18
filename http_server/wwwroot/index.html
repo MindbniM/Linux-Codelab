@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>卡玛逊乐园</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="header"></div>
+    <div class="container">
+        <div id="sidebar" class="sidebar"></div>
+        <div class="content">
+            <iframe id="content-frame" class="iframe-container" src="guild-info.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Load header and sidebar
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => document.getElementById('header').innerHTML = data);
+
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => document.getElementById('sidebar').innerHTML = data);
+
+        // Handle sidebar links
+        function loadContent(page) {
+            document.getElementById('content-frame').src = page;
+        }
+    </script>
+</body>
+</html>
