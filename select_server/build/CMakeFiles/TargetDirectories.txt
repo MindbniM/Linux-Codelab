@@ -1,0 +1,3 @@
+/home/mindbnim/code/select_server/build/CMakeFiles/server.dir
+/home/mindbnim/code/select_server/build/CMakeFiles/edit_cache.dir
+/home/mindbnim/code/select_server/build/CMakeFiles/rebuild_cache.dir
