@@ -1,0 +1,8 @@
+#pragma once
+enum EXE_ERROR
+{
+    EPOLL_CREATE_ERROR=1,
+    SOCKET_ERROR,
+    BIND_ERROR,
+    LISTEN_ERROR,
+};
