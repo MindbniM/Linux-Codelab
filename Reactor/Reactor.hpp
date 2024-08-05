@@ -59,7 +59,6 @@ public:
         {
             log+="is OK";
             LOG(INFO,log.c_str());
-
         }
         //debug
         for(int i=0;i<n;i++)

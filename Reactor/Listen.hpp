@@ -16,6 +16,8 @@ public:
             exit(SOCKET_ERROR);
         }
         LOG(INFO, "socket create success fd:%d", _listenfd);
+        int opt=1;
+        setsockopt(_listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
         struct sockaddr_in in;
         memset(&in, 0, sizeof(in));
         in.sin_family = AF_INET;

@@ -5,9 +5,9 @@ class handle
 public:
     void static _recv(Connect *con)
     {
-        errno = 0;
         while (1)
         {
+            errno = 0;
             char buff[1024] = {0};
             int n = recv(con->sockfd(), buff, 1023, 0);
             if (n > 0)
@@ -15,8 +15,9 @@ public:
                 buff[n] = 0;
                 con->inbuff() += buff;
                 // 交付给上层协议处理报文
-                con->outbuff()+="#:"+std::string(buff);
+                http_service::service(con);
                 //应答
+                if(!con->outbuff().empty())
                 con->send(con);
             }
             else

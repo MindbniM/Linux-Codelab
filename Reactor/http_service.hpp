@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include<sstream>
+#include<fstream>
 #include<vector>
 
 
@@ -8,10 +9,30 @@ const std::string space=" ";
 const std::string sep="\r\n";
 const std::string head_sep="\r\n\r\n";//报头分隔符
 const std::string head_s=": ";
-const std::string Path="wwwroot";
+const std::string Path="../wwwroot";
 const std::string suffix_sep=".";
-const std::string default_home="/index.html";
+const std::string default_home="index.html";
+const std::string f404=Path+"/404.html";
 
+namespace Head
+{
+    const std::string Version="HTTP/1.1";
+    const std::string Code_200="200";
+    const std::string Code_200_str="OK";
+    const std::string Code_404="404";
+    const std::string Code_404_str="Not Found";
+}
+//http报头
+namespace Header
+{
+    const std::string Content_Type="Content-Type";
+    const std::string Content_Length="Content-Length";
+    const std::string Host="Host";
+    const std::string User_Agent="User-Agent";
+    const std::string Referer = "Referer";
+    const std::string Location="Location";
+    const std::string Cookie="Cookie";
+}
 //http请求行
 struct http_rehead
 {
@@ -30,17 +51,6 @@ struct http_rehead
     std::string _URI;
     std::string _version;
 };
-//http报头
-namespace Header
-{
-    const std::string Content_Type="Content-Type";
-    const std::string Content_Length="Content-Length";
-    const std::string Host="Host";
-    const std::string User_Agent="User-Agent";
-    const std::string Referer = "Referer";
-    const std::string Location="Location";
-    const std::string Cookie="Cookie";
-}
 struct http_line
 {
     void Deserialize(const std::string& str)
@@ -113,6 +123,18 @@ public:
         _line._kv.clear();
         _data.clear();
     }
+    http_rehead head()
+    {
+        return _head;
+    }
+    http_line line()
+    {
+        return _line;
+    }
+    std::string data()
+    {
+        return _data;
+    }
 private:
     http_rehead _head;
     http_line _line;
@@ -123,10 +145,10 @@ struct http_rphead
 {
     std::string Serialize()
     {
-
+        return _version+" "+_code+" "+_codestr;
     }
     std::string _version;
-    int _code;
+    std::string _code;
     std::string _codestr;
 };
 //http应答
@@ -135,12 +157,61 @@ class http_rponse
 public:
     std::string Serialize()
     {
-
+        std::string rp=_head.Serialize();
+        rp+=sep;
+        rp+=_line.Serialize();
+        rp+=sep;
+        for(auto& c:_data)
+        {
+            rp+=c;
+        }
+        rp+=sep;
+        return rp;
     }
+    void insert(const std::string type,const std::string data)
+    {
+        _line.insert(type,data);
+    }
+    void set_head(const http_rphead& head)
+    {
+        _head=head;
+    }
+    void set_data(const std::vector<char>& data)
+    {
+        _data=data;
+    }
+static std::unordered_map<std::string,std::string> s_hash;
 private:
     http_rphead _head;
     http_line _line;
-    std::string _data;
+    std::vector<char> _data;
+};
+std::unordered_map<std::string,std::string> http_rponse::s_hash{
+    { "html", "text/html" },
+    { "htm", "text/html" },
+    { "css", "text/css" },
+    { "xml", "application/xml" },
+    { "gif", "image/gif" },
+    { "jpeg", "image/jpeg" },
+    { "jpg", "image/jpeg" },
+    { "js", "application/javascript" },
+    { "json", "application/json" },
+    { "png", "image/png" },
+    { "svg", "image/svg+xml" },
+    { "txt", "text/plain" },
+    { "woff", "font/woff" },
+    { "woff2", "font/woff2" },
+    { "ttf", "font/ttf" },
+    { "ico", "image/vnd.microsoft.icon" },
+    { "mp3", "audio/mpeg" },
+    { "mpeg", "video/mpeg" },
+    { "mp4", "video/mp4" },
+    { "webm", "video/webm" },
+    { "ogg", "audio/ogg" },
+    { "ogv", "video/ogg" },
+    { "pdf", "application/pdf" },
+    { "zip", "application/zip" },
+    { "rar", "application/x-rar-compressed" }
 };
 //服务
 class http_service
@@ -183,20 +254,86 @@ public:
         return true;
     }
     //业务处理 
-    std::string static service(std::string &inbuff)
+    void static service(Connect* con)
     {
+        std::string& inbuff=con->inbuff();
         http_request re;
         bool temp=get_full_message(inbuff,re);
         while(temp)
         {
             //处理一个报文
-            re.debug();
-            std::cout<<"已经提取一个完整的报文,缓冲区剩下"<<inbuff.size()<<std::endl;
+            con->outbuff()+=_service(re);
+            //re.debug();
+            //std::cout<<"已经提取一个完整的报文,缓冲区剩下"<<inbuff.size()<<std::endl;
             re.clear();
             //std::cout<<"re clear"<<std::endl;
             temp=get_full_message(inbuff,re);
         }
+    }
+    std::string static _service(http_request& re)
+    {
+        if(re.head()._mathod=="GET")
+        {
+            std::string str=get_mathod(re);
+            //std::cout<<str<<std::endl;
+            return str;
+        }
+        else if(re.head()._mathod=="POST")
+        {
+
+        }
+        else if(re.head()._mathod=="")
+        {
+
+        }
         return "";
     }
-
+    std::string static get_mathod(http_request& re)
+    {
+        http_rponse rp;
+        http_rphead head;
+        head._version=Head::Version;
+        head._code=Head::Code_200;
+        head._codestr=Head::Code_200_str;
+        std::string path= Path+re.head()._URI;
+        if(path.back()=='/') path+=default_home;
+        std::cout<<path<<std::endl;
+        int size;
+        std::vector<char> data=get_file(path,size,head);
+        std::string mime_type=get_mime(path);
+        rp.set_head(head);
+        rp.set_data(data);
+        rp.insert(Header::Content_Type,mime_type);
+        rp.insert(Header::Content_Length,std::to_string(size));
+        return rp.Serialize();
+    }
+    std::vector<char> static get_file(const std::string& path,int& size,http_rphead& head)
+    {
+        std::ifstream file(path.c_str(),std::ios::binary);
+        if(!file.is_open())
+        {
+            head._code=Head::Code_404;
+            head._codestr=Head::Code_404_str;
+            //std::cout<<404<<std::endl;
+            return get_file(f404,size,head);
+        }
+        file.seekg(0,std::ios::end);
+        size=file.tellg();
+        file.seekg(0,std::ios::beg);
+        char* buff=new char[size];
+        if(file.read(buff,size));
+        std::vector<char> vc(buff,buff+size);
+        delete[] buff;
+        return vc;
+    }
+    std::string static get_mime(const std::string& path)
+    {
+        int n=path.rfind(suffix_sep);
+        if(n==std::string::npos) return "text/html";
+        std::string suffix=path.substr(n+suffix_sep.size());
+        if(http_rponse::s_hash.count(suffix))
+        {
+            return http_rponse::s_hash[suffix];
+        }
+    }
 };
