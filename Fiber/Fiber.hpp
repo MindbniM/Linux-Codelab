@@ -10,9 +10,9 @@
 namespace MindbniM
 {
     //全局变量, 协程id
-    static std::atomic<uint64_t> s_fiber_id(0);
+    std::atomic<uint64_t> s_fiber_id(0);
     //全局变量, 协程数量
-    static std::atomic<uint64_t> s_fiber_num(0);
+    std::atomic<uint64_t> s_fiber_num(0);
     class Fiber : public std::enable_shared_from_this<Fiber>
     {
     public:
@@ -27,7 +27,7 @@ namespace MindbniM
           READY,  //就绪
         };
     public:
-        Fiber(func_t cb,uint32_t stack_size=128*1024);
+        Fiber(func_t cb,bool isrunInSchedule=true,uint32_t stack_size=128*1024);
         ~Fiber();
 
         //重置协程函数,重置状态INIT/TERM,复用栈空间
@@ -62,11 +62,12 @@ namespace MindbniM
         void* m_stack=nullptr;      //协程使用的栈
         state m_s=state::INIT;      //协程状态
         func_t m_cb;                //协程具体回调
+        bool m_runInSchedule;       //是否参与调度器调度
     };
     //线程当前执行的协程
-    static thread_local Fiber* t_fiber=nullptr;
+    thread_local Fiber* t_fiber=nullptr;
     //线程的主协程
-    static thread_local Fiber::ptr t_thread_fiber=nullptr;
+    thread_local Fiber::ptr t_thread_fiber=nullptr;
 
 
 
@@ -83,7 +84,7 @@ namespace MindbniM
     };
     using StackAllocator=MallocStackAllocator;
 
-    Fiber::Fiber(func_t cb,uint32_t stack_size):m_id(s_fiber_id++),m_stack_size(stack_size),m_cb(cb)
+    Fiber::Fiber(func_t cb,bool isrunInSchedule,uint32_t stack_size):m_id(s_fiber_id++),m_stack_size(stack_size),m_cb(cb),m_runInSchedule(isrunInSchedule)
     {
         ++s_fiber_num;
         m_stack=StackAllocator::Alloc(m_stack_size);

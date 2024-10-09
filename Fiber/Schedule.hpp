@@ -48,6 +48,7 @@ namespace MindbniM
         void stop();
         //设置当前调度器
         void SetThis();
+        //wait
     private:
         template<class FiberOrCb>
         bool _schedule(FiberOrCb cb);
@@ -127,17 +128,25 @@ namespace MindbniM
     void Schedule::start()
     {
         LOG_ROOT_DEBUG("Schedule 启动");
-        std::lock_guard<std::mutex> g(m_mutex);
-        if(m_stop)
         {
-            LOG_ROOT_DEBUG("Schedule 停止");
-            return;
+            std::lock_guard<std::mutex> g(m_mutex);
+            if(m_stop)
+            {
+                LOG_ROOT_DEBUG("Schedule 停止");
+                return;
+            }
+            m_threads.resize(m_threadCount);
+            for(int i=0;i<m_threadCount;i++)
+            {
+                m_threads[i]=std::thread(std::bind(&Schedule::run,this));
+                LOG_ROOT_DEBUG("start");
+            }
+
         }
-        m_threads.resize(m_threadCount);
-        for(int i=0;i<m_threadCount;i++)
+        if(m_userCall)
         {
-            m_threads[i]=std::thread(std::bind(&Schedule::run,this));
-            LOG_ROOT_DEBUG("start");
+            
+            m_rootFiber->swapIn();
         }
     }
     void Schedule::run()
@@ -151,6 +160,7 @@ namespace MindbniM
         ScheduleTask task;
         while(1)
         {
+            std::cout<<1<<std::endl;
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 if(pthread_self()==m_rootId&&m_task.empty())
