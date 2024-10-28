@@ -37,9 +37,9 @@ namespace MindbniM
         std::string _message;            // 消息
         std::shared_ptr<Logger> _logger; // 所属日志器
 
-        static int s_mess_maxlen; // 一条日志信息最大字符数
+        static const int s_mess_maxlen; // 一条日志信息最大字符数
     };
-    int LogEvent::s_mess_maxlen = 1024;
+    const int LogEvent::s_mess_maxlen = 1024;
     // 日志等级
     class LogLevel
     {
@@ -436,7 +436,7 @@ namespace MindbniM
         auto it = m_appends.begin();
         while (it != m_appends.end())
         {
-            if (*it = append)
+            if (*it == append)
             {
                 it = m_appends.erase(it);
             }
@@ -672,18 +672,20 @@ namespace MindbniM
 #define LOG_ROOT_ADD_FILEOUT_APPEND(filename, level, format) LOG_ROOT()->addAppend(FILEOUT_APPEND(filename, level, format))
 #define LOG_ADD_STDOUT_APPEND_DEFAULT(name) LOG_NAME(name)->addAppend(STDOUT_APPEND_DEFAULT())
 #define LOG_ADD_STDOUT_APPEND(name, level, format) LOG_NAME(name)->addAppend(STDOUT_APPEND(level, format))
-
+#define CXX_OUT
+#ifdef C_OUT
 #define LOG_ROOT_DEBUG(str, ...) LOG_ROOT()->debug(std::make_shared<LogEvent>(LOG_ROOT(), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_ROOT_INFO(str, ...) LOG_ROOT()->info(std::make_shared<LogEvent>(LOG_ROOT(), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_ROOT_WARNING(str, ...) LOG_ROOT()->warning(std::make_shared<LogEvent>(LOG_ROOT(), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_ROOT_ERROR(str, ...) LOG_ROOT()->error(std::make_shared<LogEvent>(LOG_ROOT(), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_ROOT_FATAL(str, ...) LOG_ROOT()->fatal(std::make_shared<LogEvent>(LOG_ROOT(), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 
-#define LOG_INFO(name, str, ...) LOG_NAME(name)->info(std::make_shared<LogEvent>(LOG_NAME(name), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_DEBUG(name, str, ...) LOG_NAME(name)->debug(std::make_shared<LogEvent>(LOG_NAME(name), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
+#define LOG_INFO(name, str, ...) LOG_NAME(name)->info(std::make_shared<LogEvent>(LOG_NAME(name), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_WARNING(name, str, ...) LOG_NAME(name)->warning(std::make_shared<LogEvent>(LOG_NAME(name), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_ERROR(name, str, ...) LOG_NAME(name)->error(std::make_shared<LogEvent>(LOG_NAME(name), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
 #define LOG_FATAL(name, str, ...) LOG_NAME(name)->fatal(std::make_shared<LogEvent>(LOG_NAME(name), __FILE__, __LINE__, pthread_self(), 0, ::time(nullptr), str, ##__VA_ARGS__))
+#endif
     class LogOut
     {
     public:
@@ -701,6 +703,18 @@ namespace MindbniM
         const char* _file;
         int line;
     };
-#define LROOT_INFO LogOut(LOG_ROOT(),LogLevel::Level::INFO,__FILE__,__LINE__).Out()
+#ifdef CXX_OUT
+#define LOG_DEBUG(name) LogOut(LOG_NAME(name),LogLevel::Level::DEBUG,__FILE__,__LINE__).Out()
+#define LOG_INFO(name) LogOut(LOG_NAME(name),LogLevel::Level::INFO,__FILE__,__LINE__).Out()
+#define LOG_WARNING(name) LogOut(LOG_NAME(name),LogLevel::Level::WARNING,__FILE__,__LINE__).Out()
+#define LOG_ERROR(name) LogOut(LOG_NAME(name),LogLevel::Level::ERROR,__FILE__,__LINE__).Out()
+#define LOG_FATAL(name) LogOut(LOG_NAME(name),LogLevel::Level::FATAL,__FILE__,__LINE__).Out()
+
+#define LOG_ROOT_DEBUG LogOut(LOG_ROOT(),LogLevel::Level::DEBUG,__FILE__,__LINE__).Out()
+#define LOG_ROOT_INFO LogOut(LOG_ROOT(),LogLevel::Level::INFO,__FILE__,__LINE__).Out()
+#define LOG_ROOT_WARNING LogOut(LOG_ROOT(),LogLevel::Level::WARNING,__FILE__,__LINE__).Out()
+#define LOG_ROOT_ERROR LogOut(LOG_ROOT(),LogLevel::Level::ERROR,__FILE__,__LINE__).Out()
+#define LOG_ROOT_FATAL LogOut(LOG_ROOT(),LogLevel::Level::FATAL,__FILE__,__LINE__).Out()
+#endif
 
 }
